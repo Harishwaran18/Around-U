@@ -1,126 +1,220 @@
 {% extends "base.html" %}
+{% from "macros.html" import event_card, icon, status_pill %}
 
 {% block title %}Dashboard — AroundU{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <div class="container page-header-inner">
-        <div>
-            <p class="eyebrow">{{ current_user.role }} dashboard</p>
-            <h1>Welcome, {{ current_user.username }}</h1>
-            <p class="text-secondary">{{ current_user.college_name }}</p>
-        </div>
-        {% if current_user.is_organizer %}
-        <a href="{{ url_for('events.create_event') }}" class="btn btn-primary">+ New event</a>
-        {% else %}
-        <a href="{{ url_for('main.index') }}#events" class="btn btn-outline">Browse events</a>
-        {% endif %}
-    </div>
-</div>
-
-<div class="container section">
-    {% if current_user.is_organizer %}
-    <div class="stat-grid">
-        <div class="stat-card glass">
-            <span class="stat-label">Events published</span>
-            <strong class="stat-value">{{ events|length }}</strong>
-        </div>
-        <div class="stat-card glass">
-            <span class="stat-label">Total applications</span>
-            <strong class="stat-value">{{ events|sum(attribute='registration_count') }}</strong>
-        </div>
-        <div class="stat-card glass">
-            <span class="stat-label">Awaiting review</span>
-            <strong class="stat-value text-accent">{{ pending_count }}</strong>
-        </div>
-    </div>
-
-    <h2 class="section-title">Your events</h2>
-    {% if events %}
-    <div class="event-grid">
-        {% for event in events %}
-        <article class="card glass">
-            <div class="card-img-wrapper">
-                <img class="card-img"
-                    src="{{ event.image_url or url_for('static', filename='images/event-placeholder.svg') }}"
-                    alt="{{ event.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/event-placeholder.svg') }}';">
-                <span class="badge badge-category">{{ event.category }}</span>
-                {% if event.is_past %}<span class="badge badge-past">Past</span>{% endif %}
+<section class="page-hero">
+    <div class="container">
+        <span class="eyebrow">Control // {{ current_user.role }}</span>
+        <div class="page-hero-row">
+            <div class="page-hero-copy">
+                <h1>Welcome, {{ current_user.username }}</h1>
+                <p class="page-hero-sub">
+                    {{ current_user.college_name }}
+                    <span class="dot-sep">·</span>
+                    {{ current_user.email }}
+                </p>
             </div>
-            <div class="card-content">
-                <p class="card-college">{{ event.host_college }}</p>
-                <h3 class="card-title">
-                    <a href="{{ url_for('events.event_details', event_id=event.id) }}">{{ event.title }}</a>
-                </h3>
-                <div class="card-meta">
-                    <span class="meta-item">{{ event.date.strftime('%b %d, %Y') }}</span>
-                    <span class="meta-item">{{ event.registration_count }} applied</span>
-                </div>
-                {% if event.pending_count %}
-                <p class="card-note text-accent">{{ event.pending_count }} awaiting your review</p>
+            <div class="page-hero-actions">
+                {% if current_user.is_organizer %}
+                <a class="btn btn-primary" href="{{ url_for('events.create_event') }}">{{ icon('plus', 16) }} New
+                    event</a>
                 {% endif %}
-                <div class="card-footer card-footer-actions">
-                    <a href="{{ url_for('events.manage_event', event_id=event.id) }}"
-                        class="btn btn-primary btn-sm">Manage</a>
-                    <a href="{{ url_for('events.edit_event', event_id=event.id) }}"
-                        class="btn btn-outline btn-sm">Edit</a>
-                </div>
+                <a class="btn btn-outline" href="{{ url_for('main.index') }}#events">Browse events</a>
             </div>
-        </article>
-        {% endfor %}
+        </div>
     </div>
-    {% else %}
-    <div class="empty-state glass">
-        <h3>No events yet</h3>
-        <p>Publish your first event and students from every campus can apply.</p>
-        <a href="{{ url_for('events.create_event') }}" class="btn btn-primary">Host an event</a>
-    </div>
-    {% endif %}
+</section>
 
-    {% else %}
-    <h2 class="section-title">Your applications</h2>
-    {% if registrations %}
-    <div class="event-grid">
-        {% for registration in registrations %}
-        <article class="card glass">
-            <div class="card-img-wrapper">
-                <img class="card-img"
-                    src="{{ registration.event.image_url or url_for('static', filename='images/event-placeholder.svg') }}"
-                    alt="{{ registration.event.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/event-placeholder.svg') }}';">
-                <span class="badge badge-category">{{ registration.event.category }}</span>
-            </div>
-            <div class="card-content">
-                <p class="card-college">{{ registration.event.host_college }}</p>
-                <h3 class="card-title">
-                    <a
-                        href="{{ url_for('events.event_details', event_id=registration.event.id) }}">{{ registration.event.title }}</a>
-                </h3>
-                <div class="card-meta">
-                    <span class="meta-item">{{ registration.event.date.strftime('%b %d, %Y') }}</span>
-                    <span class="status-pill status-{{ registration.status }}">{{ registration.status }}</span>
-                </div>
-                <div class="card-footer card-footer-actions">
-                    <a href="{{ url_for('events.event_details', event_id=registration.event.id) }}"
-                        class="btn btn-outline btn-sm">View details</a>
-                    {% if not registration.event.is_past %}
-                    <form method="POST" action="{{ url_for('events.cancel_registration', event_id=registration.event.id) }}"
-                        data-confirm="Withdraw your application?">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-ghost btn-sm">Withdraw</button>
-                    </form>
-                    {% endif %}
-                </div>
-            </div>
-        </article>
-        {% endfor %}
+{% if current_user.is_organizer %}
+{% set total_events = events|length %}
+{% set total_applications = events|sum(attribute='registration_count') %}
+{% set total_accepted = events|sum(attribute='accepted_count') %}
+<section class="section section--tight">
+    <div class="container">
+        <div class="stat-grid">
+            <article class="stat-card">
+                <span class="mono stat-label">Events hosted</span>
+                <strong class="stat-value" data-count="{{ total_events }}">{{ total_events }}</strong>
+                <span class="stat-note">{{ events|selectattr('is_past')|list|length }} completed</span>
+            </article>
+            <article class="stat-card">
+                <span class="mono stat-label">Applications</span>
+                <strong class="stat-value" data-count="{{ total_applications }}">{{ total_applications }}</strong>
+                <span class="stat-note">across every event</span>
+            </article>
+            <article class="stat-card">
+                <span class="mono stat-label">Accepted</span>
+                <strong class="stat-value" data-count="{{ total_accepted }}">{{ total_accepted }}</strong>
+                <span class="stat-note">students confirmed</span>
+            </article>
+            <article class="stat-card stat-card--accent">
+                <span class="mono stat-label">Needs review</span>
+                <strong class="stat-value" data-count="{{ pending_count }}">{{ pending_count }}</strong>
+                <span class="stat-note">pending applications</span>
+            </article>
+        </div>
     </div>
-    {% else %}
-    <div class="empty-state glass">
-        <h3>No applications yet</h3>
-        <p>Browse events hosted by colleges across the country and apply in one click.</p>
-        <a href="{{ url_for('main.index') }}#events" class="btn btn-primary">Explore events</a>
+</section>
+
+<section class="section section--tight">
+    <div class="container">
+        <div class="panel">
+            <div class="panel-head">
+                <div>
+                    <span class="eyebrow">Your events</span>
+                    <h2>Manage listings</h2>
+                </div>
+                <span class="mono">{{ total_events }} TOTAL</span>
+            </div>
+
+            {% if events %}
+            <div class="manage-list">
+                {% for event in events %}
+                <article class="manage-row" data-reveal>
+                    <a class="manage-thumb" href="{{ url_for('events.event_details', event_id=event.id) }}">
+                        <img src="{{ event.image_url or url_for('static', filename='images/event-placeholder.svg') }}"
+                            alt="" loading="lazy"
+                            onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/event-placeholder.svg') }}';">
+                    </a>
+
+                    <div class="manage-main">
+                        <div class="manage-top">
+                            <span class="pill">{{ event.category }}</span>
+                            <span class="mono">{{ event.date.strftime('%d %b %Y') }}</span>
+                        </div>
+                        <h3><a href="{{ url_for('events.event_details', event_id=event.id) }}">{{ event.title }}</a></h3>
+                        <p class="manage-meta">{{ icon('pin', 14) }} {{ event.location }}</p>
+
+                        <div class="manage-meter">
+                            <div class="capacity-head mono">
+                                <span>{{ event.registration_count }} / {{ event.capacity or '∞' }} SEATS</span>
+                                <span>{% if event.capacity %}{{ event.seats_left }} LEFT{% else %}OPEN ENTRY{% endif %}</span>
+                            </div>
+                            <div class="meter">
+                                <span
+                                    style="width: {{ ((event.registration_count / event.capacity) * 100)|round|int if event.capacity else 100 }}%"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="manage-actions">
+                        <a class="btn btn-sm btn-outline" href="{{ url_for('events.manage_event', event_id=event.id) }}">
+                            Review{% if event.pending_count %} <span class="count-badge">{{ event.pending_count }}</span>{% endif %}
+                        </a>
+                        <a class="icon-btn" href="{{ url_for('events.edit_event', event_id=event.id) }}"
+                            aria-label="Edit {{ event.title }}">{{ icon('edit', 16) }}</a>
+                        <form method="POST" action="{{ url_for('events.delete_event', event_id=event.id) }}"
+                            data-confirm="Delete “{{ event.title }}”? This also removes its applications.">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="icon-btn icon-btn--danger"
+                                aria-label="Delete {{ event.title }}">{{ icon('trash', 16) }}</button>
+                        </form>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state empty-state--inline">
+                <span class="empty-icon">{{ icon('layers', 26) }}</span>
+                <h3>No events yet</h3>
+                <p>Publish your first event and start taking applications.</p>
+                <a class="btn btn-primary" href="{{ url_for('events.create_event') }}">Create event</a>
+            </div>
+            {% endif %}
+        </div>
     </div>
-    {% endif %}
-    {% endif %}
-</div>
+</section>
+
+{% else %}
+{% set total_applications = registrations|length %}
+{% set total_accepted = registrations|selectattr('status', 'equalto', 'accepted')|list|length %}
+{% set total_pending = registrations|selectattr('status', 'equalto', 'pending')|list|length %}
+<section class="section section--tight">
+    <div class="container">
+        <div class="stat-grid">
+            <article class="stat-card">
+                <span class="mono stat-label">Applications</span>
+                <strong class="stat-value" data-count="{{ total_applications }}">{{ total_applications }}</strong>
+                <span class="stat-note">events applied to</span>
+            </article>
+            <article class="stat-card">
+                <span class="mono stat-label">Accepted</span>
+                <strong class="stat-value" data-count="{{ total_accepted }}">{{ total_accepted }}</strong>
+                <span class="stat-note">you're confirmed</span>
+            </article>
+            <article class="stat-card stat-card--accent">
+                <span class="mono stat-label">Pending</span>
+                <strong class="stat-value" data-count="{{ total_pending }}">{{ total_pending }}</strong>
+                <span class="stat-note">awaiting review</span>
+            </article>
+            <article class="stat-card">
+                <span class="mono stat-label">Campus reach</span>
+                <strong class="stat-value">{{ registrations|map(attribute='event.host_college')|unique|list|length }}</strong>
+                <span class="stat-note">colleges applied to</span>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="section section--tight">
+    <div class="container">
+        <div class="panel">
+            <div class="panel-head">
+                <div>
+                    <span class="eyebrow">Your activity</span>
+                    <h2>Applications</h2>
+                </div>
+                <span class="mono">{{ total_applications }} TOTAL</span>
+            </div>
+
+            {% if registrations %}
+            <div class="app-list">
+                {% for registration in registrations %}
+                {% set event = registration.event %}
+                <article class="app-row" data-reveal>
+                    <a class="app-thumb" href="{{ url_for('events.event_details', event_id=event.id) }}">
+                        <img src="{{ event.image_url or url_for('static', filename='images/event-placeholder.svg') }}"
+                            alt="" loading="lazy"
+                            onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/event-placeholder.svg') }}';">
+                    </a>
+
+                    <div class="app-main">
+                        <div class="app-top">
+                            <span class="pill">{{ event.category }}</span>
+                            {{ status_pill(registration.status) }}
+                        </div>
+                        <h3><a href="{{ url_for('events.event_details', event_id=event.id) }}">{{ event.title }}</a></h3>
+                        <p class="app-meta">{{ event.host_college }} <span class="dot-sep">·</span>
+                            {{ event.date.strftime('%b %d, %Y') }}</p>
+                        <p class="app-location mono">{{ icon('pin', 12) }} {{ event.location }}</p>
+                    </div>
+
+                    <div class="app-actions">
+                        <a class="btn btn-sm btn-outline"
+                            href="{{ url_for('events.event_details', event_id=event.id) }}">Details</a>
+                        {% if registration.status == 'pending' %}
+                        <form method="POST" action="{{ url_for('events.cancel_registration', event_id=event.id) }}"
+                            data-confirm="Withdraw your application for “{{ event.title }}”?">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-ghost">Withdraw</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state empty-state--inline">
+                <span class="empty-icon">{{ icon('spark', 26) }}</span>
+                <h3>No applications yet</h3>
+                <p>Find an event from another campus and apply in one click.</p>
+                <a class="btn btn-primary" href="{{ url_for('main.index') }}#events">Discover events</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}
 {% endblock %}

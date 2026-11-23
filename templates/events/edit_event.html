@@ -1,17 +1,67 @@
 {% extends "base.html" %}
+{% from "macros.html" import icon %}
 
 {% block title %}Edit {{ event.title }} — AroundU{% endblock %}
 
 {% block content %}
-<div class="form-container form-wide glass">
-    <h2 class="mb-2">Edit event</h2>
-    <p class="form-hint mb-8">{{ event.title }}</p>
+<section class="page-hero">
+    <div class="container">
+        <span class="eyebrow">Host // Edit event</span>
+        <div class="page-hero-row">
+            <div class="page-hero-copy">
+                <h1>Edit event</h1>
+                <p class="page-hero-sub">{{ event.title }}</p>
+            </div>
+            <div class="page-hero-actions">
+                <a class="btn btn-outline" href="{{ url_for('events.event_details', event_id=event.id) }}">View
+                    event</a>
+                <a class="btn btn-ghost" href="{{ url_for('main.dashboard') }}">Cancel</a>
+            </div>
+        </div>
+    </div>
+</section>
 
-    {% set action_url = url_for('events.edit_event', event_id=event.id) %}
-    {% set submit_label = 'Save changes' %}
-    {% include "events/_event_form.html" %}
+<section class="section section--tight">
+    <div class="container form-shell">
+        <form method="POST" action="{{ url_for('events.edit_event', event_id=event.id) }}" class="panel form"
+            novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-    <a href="{{ url_for('events.manage_event', event_id=event.id) }}"
-        class="btn btn-ghost w-full mt-4">Back to applications</a>
-</div>
+            <div class="panel-head">
+                <div>
+                    <span class="eyebrow">Update</span>
+                    <h2>Event details</h2>
+                </div>
+                <span class="mono">EDITING</span>
+            </div>
+
+            {% include "events/_event_form.html" %}
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save changes {{ icon('check', 16) }}</button>
+                <a class="btn btn-ghost" href="{{ url_for('main.dashboard') }}">Cancel</a>
+            </div>
+        </form>
+
+        <aside class="form-aside">
+            <div class="aside-card">
+                <span class="eyebrow">Live stats</span>
+                <div class="mini-stats">
+                    <div><strong>{{ event.registration_count }}</strong><span class="mono">APPLIED</span></div>
+                    <div><strong>{{ event.accepted_count }}</strong><span class="mono">ACCEPTED</span></div>
+                    <div><strong>{{ event.pending_count }}</strong><span class="mono">PENDING</span></div>
+                </div>
+            </div>
+            <div class="aside-card aside-card--danger">
+                <span class="eyebrow">Danger zone</span>
+                <p>Deleting the event removes every application for it. This cannot be undone.</p>
+                <form method="POST" action="{{ url_for('events.delete_event', event_id=event.id) }}"
+                    data-confirm="Delete “{{ event.title }}”? This also removes its applications.">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger btn-block">{{ icon('trash', 15) }} Delete event</button>
+                </form>
+            </div>
+        </aside>
+    </div>
+</section>
 {% endblock %}

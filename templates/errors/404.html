@@ -1,12 +1,20 @@
 {% extends "base.html" %}
+{% from "macros.html" import icon %}
 
 {% block title %}Page not found — AroundU{% endblock %}
 
 {% block content %}
-<div class="container error-page">
-    <p class="error-code">404</p>
-    <h1>That page does not exist</h1>
-    <p class="text-secondary">The link may be broken, or the event may have been removed.</p>
-    <a href="{{ url_for('main.index') }}" class="btn btn-primary">Back to events</a>
-</div>
+<section class="error-page">
+    <div class="container error-inner">
+        <span class="mono error-code">404</span>
+        <span class="eyebrow">Signal lost</span>
+        <h1>This page does not exist.</h1>
+        <p>The link may be broken, or the event may have been removed. Head back to the network
+            and find something worth showing up for.</p>
+        <div class="error-actions">
+            <a class="btn btn-primary" href="{{ url_for('main.index') }}#events">Discover events</a>
+            <a class="btn btn-outline" href="{{ url_for('main.index') }}">Go home</a>
+        </div>
+    </div>
+</section>
 {% endblock %}

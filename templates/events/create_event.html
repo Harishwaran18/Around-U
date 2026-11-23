@@ -1,14 +1,61 @@
 {% extends "base.html" %}
+{% from "macros.html" import icon %}
 
-{% block title %}Host an event — AroundU{% endblock %}
+{% block title %}Create event — AroundU{% endblock %}
 
 {% block content %}
-<div class="form-container form-wide glass">
-    <h2 class="mb-2">Host an event</h2>
-    <p class="form-hint mb-8">Publish once and reach students on every campus.</p>
+<section class="page-hero">
+    <div class="container">
+        <span class="eyebrow">Host // New event</span>
+        <div class="page-hero-row">
+            <div class="page-hero-copy">
+                <h1>Create an event</h1>
+                <p class="page-hero-sub">Publish to every campus on the network.</p>
+            </div>
+            <div class="page-hero-actions">
+                <a class="btn btn-outline" href="{{ url_for('main.dashboard') }}">Cancel</a>
+            </div>
+        </div>
+    </div>
+</section>
 
-    {% set action_url = url_for('events.create_event') %}
-    {% set submit_label = 'Publish event' %}
-    {% include "events/_event_form.html" %}
-</div>
+<section class="section section--tight">
+    <div class="container form-shell">
+        <form method="POST" action="{{ url_for('events.create_event') }}" class="panel form" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="panel-head">
+                <div>
+                    <span class="eyebrow">Step 01</span>
+                    <h2>Event details</h2>
+                </div>
+                <span class="mono">DRAFT</span>
+            </div>
+
+            {% include "events/_event_form.html" %}
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Publish event {{ icon('arrow-right', 16) }}</button>
+                <a class="btn btn-outline" href="{{ url_for('main.dashboard') }}">Cancel</a>
+            </div>
+        </form>
+
+        <aside class="form-aside">
+            <div class="aside-card">
+                <span class="eyebrow">Checklist</span>
+                <ul class="checklist">
+                    <li>{{ icon('check', 14) }} A clear title and outcome</li>
+                    <li>{{ icon('check', 14) }} Date, venue and start time</li>
+                    <li>{{ icon('check', 14) }} Who should apply</li>
+                    <li>{{ icon('check', 14) }} Capacity or open entry</li>
+                </ul>
+            </div>
+            <div class="aside-card">
+                <span class="eyebrow">Good to know</span>
+                <p>Events go live immediately. You can edit or delete them any time from your dashboard.
+                    Applications arrive as pending until you approve them.</p>
+            </div>
+        </aside>
+    </div>
+</section>
 {% endblock %}

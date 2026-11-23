@@ -1,107 +1,153 @@
 {% extends "base.html" %}
+{% from "macros.html" import icon, status_pill %}
 
 {% block title %}Manage {{ event.title }} — AroundU{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <div class="container page-header-inner">
-        <div>
-            <p class="eyebrow">Manage event</p>
-            <h1>{{ event.title }}</h1>
-            <p class="text-secondary">{{ event.host_college }} · {{ event.date.strftime('%b %d, %Y') }}</p>
-        </div>
-        <div class="header-actions">
-            <a href="{{ url_for('events.edit_event', event_id=event.id) }}" class="btn btn-outline">Edit</a>
-            <form method="POST" action="{{ url_for('events.delete_event', event_id=event.id) }}"
-                data-confirm="Delete this event and all its applications? This cannot be undone.">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-danger">Delete</button>
-            </form>
+<section class="page-hero">
+    <div class="container">
+        <span class="eyebrow">Host // Review</span>
+        <div class="page-hero-row">
+            <div class="page-hero-copy">
+                <h1>{{ event.title }}</h1>
+                <p class="page-hero-sub">
+                    {{ event.date.strftime('%A, %b %d, %Y') }}
+                    <span class="dot-sep">·</span>
+                    {{ event.location }}
+                </p>
+            </div>
+            <div class="page-hero-actions">
+                <a class="btn btn-outline" href="{{ url_for('events.event_details', event_id=event.id) }}">View
+                    event</a>
+                <a class="btn btn-primary" href="{{ url_for('events.edit_event', event_id=event.id) }}">{{ icon('edit',
+                    15) }} Edit</a>
+            </div>
         </div>
     </div>
-</div>
+</section>
 
-<div class="container section">
-    <div class="stat-grid">
-        <div class="stat-card glass">
-            <span class="stat-label">Applications</span>
-            <strong class="stat-value">{{ event.registration_count }}</strong>
+<section class="section section--tight">
+    <div class="container">
+        <div class="stat-grid stat-grid--spaced">
+            <article class="stat-card">
+                <span class="mono stat-label">Applications</span>
+                <strong class="stat-value">{{ registrations|length }}</strong>
+                <span class="stat-note">total received</span>
+            </article>
+            <article class="stat-card">
+                <span class="mono stat-label">Accepted</span>
+                <strong class="stat-value">{{ event.accepted_count }}</strong>
+                <span class="stat-note">confirmed students</span>
+            </article>
+            <article class="stat-card stat-card--accent">
+                <span class="mono stat-label">Pending</span>
+                <strong class="stat-value">{{ event.pending_count }}</strong>
+                <span class="stat-note">need your review</span>
+            </article>
+            <article class="stat-card">
+                <span class="mono stat-label">Capacity</span>
+                <strong class="stat-value">{{ event.capacity or '∞' }}</strong>
+                <span class="stat-note">{% if event.capacity %}{{ event.seats_left }} seats left{% else %}open entry{% endif %}</span>
+            </article>
         </div>
-        <div class="stat-card glass">
-            <span class="stat-label">Accepted</span>
-            <strong class="stat-value text-success">{{ event.accepted_count }}</strong>
-        </div>
-        <div class="stat-card glass">
-            <span class="stat-label">Pending</span>
-            <strong class="stat-value text-accent">{{ event.pending_count }}</strong>
-        </div>
-        <div class="stat-card glass">
-            <span class="stat-label">Seats left</span>
-            <strong class="stat-value">{{ event.seats_left if event.capacity else '∞' }}</strong>
-        </div>
-    </div>
 
-    <h2 class="section-title">Applications</h2>
-    {% if registrations %}
-    <div class="table-wrap glass">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th scope="col">Student</th>
-                    <th scope="col">College</th>
-                    <th scope="col">Applied</th>
-                    <th scope="col">Status</th>
-                    <th scope="col" class="text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for registration in registrations %}
-                <tr>
-                    <td>
-                        <strong>{{ registration.participant.username }}</strong>
-                        <span class="table-sub">{{ registration.participant.email }}</span>
-                    </td>
-                    <td>{{ registration.participant.college_name }}</td>
-                    <td>{{ registration.applied_at.strftime('%b %d, %Y') }}</td>
-                    <td>
-                        <span class="status-pill status-{{ registration.status }}">{{ registration.status }}</span>
-                    </td>
-                    <td>
-                        <div class="table-actions">
-                            {% if registration.status != 'accepted' %}
-                            <form method="POST"
-                                action="{{ url_for('events.update_registration', event_id=event.id, registration_id=registration.id, action='accept') }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-success btn-xs">Accept</button>
-                            </form>
-                            {% endif %}
-                            {% if registration.status != 'rejected' %}
-                            <form method="POST"
-                                action="{{ url_for('events.update_registration', event_id=event.id, registration_id=registration.id, action='reject') }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-danger btn-xs">Reject</button>
-                            </form>
-                            {% endif %}
-                            {% if registration.status != 'pending' %}
-                            <form method="POST"
-                                action="{{ url_for('events.update_registration', event_id=event.id, registration_id=registration.id, action='pending') }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-ghost btn-xs">Reset</button>
-                            </form>
-                            {% endif %}
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="panel">
+            <div class="panel-head">
+                <div>
+                    <span class="eyebrow">Applicants</span>
+                    <h2>Review applications</h2>
+                </div>
+                <div class="panel-head-tools">
+                    <button type="button" class="btn btn-sm btn-outline" data-export-csv="applicants">
+                        {{ icon('download', 14) }} Export CSV
+                    </button>
+                </div>
+            </div>
+
+            {% if registrations %}
+            <div class="filter-tabs" role="tablist" aria-label="Filter applications">
+                <button type="button" class="tab is-active" data-status-filter="all">All
+                    <span>{{ registrations|length }}</span></button>
+                <button type="button" class="tab" data-status-filter="pending">Pending
+                    <span>{{ event.pending_count }}</span></button>
+                <button type="button" class="tab" data-status-filter="accepted">Accepted
+                    <span>{{ event.accepted_count }}</span></button>
+                <button type="button" class="tab" data-status-filter="rejected">Rejected
+                    <span>{{ registrations|length - event.pending_count - event.accepted_count }}</span></button>
+            </div>
+
+            <div class="table-wrap">
+                <table class="data-table" id="applicants">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>College</th>
+                            <th>Applied</th>
+                            <th>Status</th>
+                            <th class="th-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for registration in registrations %}
+                        {% set participant = registration.participant %}
+                        <tr data-status="{{ registration.status }}" data-name="{{ participant.username }}"
+                            data-email="{{ participant.email }}" data-college="{{ participant.college_name }}"
+                            data-applied="{{ registration.applied_at.strftime('%Y-%m-%d') }}">
+                            <td>
+                                <div class="person">
+                                    <span class="avatar">{{ participant.initials }}</span>
+                                    <div>
+                                        <strong>{{ participant.username }}</strong>
+                                        <span>{{ participant.email }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="td-college">{{ participant.college_name }}</td>
+                            <td class="mono td-applied">{{ registration.applied_at.strftime('%b %d, %Y') }}</td>
+                            <td>{{ status_pill(registration.status) }}</td>
+                            <td>
+                                <div class="row-actions">
+                                    {% if registration.status != 'accepted' %}
+                                    <form method="POST"
+                                        action="{{ url_for('events.update_registration', event_id=event.id, registration_id=registration.id, action='accept') }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-xs btn-accept">Accept</button>
+                                    </form>
+                                    {% endif %}
+                                    {% if registration.status != 'rejected' %}
+                                    <form method="POST"
+                                        action="{{ url_for('events.update_registration', event_id=event.id, registration_id=registration.id, action='reject') }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-xs btn-reject">Reject</button>
+                                    </form>
+                                    {% endif %}
+                                    {% if registration.status != 'pending' %}
+                                    <form method="POST"
+                                        action="{{ url_for('events.update_registration', event_id=event.id, registration_id=registration.id, action='pending') }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-xs btn-ghost">Reset</button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="table-empty" data-table-empty hidden>No applications match this filter.</p>
+            {% else %}
+            <div class="empty-state empty-state--inline">
+                <span class="empty-icon">{{ icon('users', 26) }}</span>
+                <h3>No applications yet</h3>
+                <p>Share your event link so students from other campuses can find it.</p>
+                <button type="button" class="btn btn-outline" data-copy="{{ url_for('events.event_details', event_id=event.id, _external=True) }}">
+                    {{ icon('share', 15) }} <span>Copy event link</span>
+                </button>
+            </div>
+            {% endif %}
+        </div>
     </div>
-    {% else %}
-    <div class="empty-state glass">
-        <h3>No applications yet</h3>
-        <p>Share the event link with students so they can apply.</p>
-        <a href="{{ url_for('events.event_details', event_id=event.id) }}" class="btn btn-outline">View public page</a>
-    </div>
-    {% endif %}
-</div>
+</section>
 {% endblock %}

@@ -1,122 +1,276 @@
 {% extends "base.html" %}
-{% from "macros.html" import event_card %}
+{% from "macros.html" import event_card, icon %}
 
-{% block title %}AroundU — Discover college events across campuses{% endblock %}
+{% block title %}AroundU — Every campus. One stage.{% endblock %}
 
 {% block content %}
-<header class="hero">
-    <div class="container hero-content">
-        <span class="hero-subtitle">The inter-college event network</span>
-        <h1>Every campus.<br>One stage.</h1>
-        <p class="hero-lead">
-            Book events at other colleges. A tier 3 student can walk into an IIT fest. An IIT
-            student can compete at a government college hackathon. Same platform, same opportunity.
-        </p>
-        <div class="hero-actions">
-            <a href="#events" class="btn btn-primary">Explore events</a>
-            {% if current_user.is_authenticated %}
-            {% if current_user.is_organizer %}
-            <a href="{{ url_for('events.create_event') }}" class="btn btn-outline">Host an event</a>
-            {% else %}
-            <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline">My dashboard</a>
-            {% endif %}
-            {% else %}
-            <a href="{{ url_for('auth.register') }}" class="btn btn-outline">Create free account</a>
-            {% endif %}
+<section class="hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container hero-inner">
+        <div class="hero-copy">
+            <span class="eyebrow"><span class="status-dot"></span> Inter-college event network</span>
+            <h1>Every campus.<br><span class="text-gradient">One stage.</span></h1>
+            <p class="hero-lead">
+                Book events at other colleges. A tier 3 student can walk into an IIT fest. An IIT
+                student can compete at a government college hackathon. Same platform, same stage,
+                same opportunity.
+            </p>
+            <div class="hero-actions">
+                <a href="#events" class="btn btn-primary">Explore events {{ icon('arrow-right', 16) }}</a>
+                {% if current_user.is_authenticated %}
+                {% if current_user.is_organizer %}
+                <a href="{{ url_for('events.create_event') }}" class="btn btn-outline">Host an event</a>
+                {% else %}
+                <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline">My dashboard</a>
+                {% endif %}
+                {% else %}
+                <a href="{{ url_for('auth.register') }}" class="btn btn-outline">Create free account</a>
+                {% endif %}
+            </div>
+            <p class="hero-trust mono">NO INVITE NEEDED · OPEN TO EVERY COLLEGE · FREE FOR STUDENTS</p>
         </div>
 
-        <dl class="hero-stats">
-            <div>
-                <dt>Live events</dt>
-                <dd>{{ stats.events }}</dd>
+        <aside class="hud" aria-label="Network readout">
+            <div class="hud-head">
+                <span class="mono">NETWORK READOUT</span>
+                <span class="hud-live mono"><span class="status-dot"></span> LIVE</span>
             </div>
-            <div>
-                <dt>Campuses</dt>
-                <dd>{{ stats.colleges }}</dd>
-            </div>
-            <div>
-                <dt>Students</dt>
-                <dd>{{ stats.students }}</dd>
-            </div>
-        </dl>
-    </div>
-</header>
 
-<section id="events" class="container section">
-    <div class="section-head">
-        <h2>Upcoming events</h2>
-        <p class="section-sub">Filter by campus, category or keyword.</p>
-    </div>
+            <div class="hud-stats">
+                <div class="hud-stat">
+                    <span class="hud-value" data-count="{{ stats.events }}">{{ stats.events }}</span>
+                    <span class="mono">LIVE EVENTS</span>
+                </div>
+                <div class="hud-stat">
+                    <span class="hud-value" data-count="{{ stats.colleges }}">{{ stats.colleges }}</span>
+                    <span class="mono">CAMPUSES</span>
+                </div>
+                <div class="hud-stat">
+                    <span class="hud-value" data-count="{{ stats.students }}">{{ stats.students }}</span>
+                    <span class="mono">STUDENTS</span>
+                </div>
+            </div>
 
-    <form class="filter-bar glass" method="GET" action="{{ url_for('main.index') }}" data-auto-submit>
-        <div class="filter-field filter-search">
-            <label class="sr-only" for="q">Search events</label>
-            <input class="form-control" type="search" id="q" name="q"
-                placeholder="Search events, colleges, cities…" value="{{ filters.q }}">
-        </div>
-        <div class="filter-field">
-            <label class="sr-only" for="category">Category</label>
-            <select class="form-control" id="category" name="category">
-                <option value="">All categories</option>
-                {% for category in categories %}
-                <option value="{{ category }}" {% if filters.category == category %}selected{% endif %}>
-                    {{ category }}
-                </option>
+            <div class="hud-list">
+                <div class="hud-list-head mono">
+                    <span>NEXT UP</span>
+                    <span>{{ events|length }} TOTAL</span>
+                </div>
+                {% for event in events[:3] %}
+                <a class="hud-row" href="{{ url_for('events.event_details', event_id=event.id) }}">
+                    <span class="hud-row-date mono">{{ event.date.strftime('%d %b') }}</span>
+                    <span class="hud-row-main">
+                        <strong>{{ event.title }}</strong>
+                        <span>{{ event.host_college }}</span>
+                    </span>
+                    {{ icon('arrow-right', 14) }}
+                </a>
+                {% else %}
+                <p class="hud-empty">No events yet. Be the first to host one.</p>
                 {% endfor %}
-            </select>
-        </div>
-        <div class="filter-field">
-            <label class="sr-only" for="college">College</label>
-            <select class="form-control" id="college" name="college">
-                <option value="">All colleges</option>
-                {% for college in colleges %}
-                <option value="{{ college }}" {% if filters.college == college %}selected{% endif %}>
-                    {{ college }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="filter-actions">
-            <button type="submit" class="btn btn-primary">Filter</button>
-            <a href="{{ url_for('main.index') }}#events" class="btn btn-ghost">Reset</a>
-        </div>
-    </form>
-
-    {% if events %}
-    <div class="event-grid">
-        {% for event in events %}
-        {{ event_card(event) }}
-        {% endfor %}
+            </div>
+        </aside>
     </div>
-    {% else %}
-    <div class="empty-state glass">
-        <h3>No events match that search</h3>
-        <p>Try a different keyword or clear the filters.</p>
-        <a href="{{ url_for('main.index') }}#events" class="btn btn-outline">Clear filters</a>
-    </div>
-    {% endif %}
 </section>
 
-<section class="container section how-it-works">
-    <div class="section-head">
-        <h2>How AroundU works</h2>
-        <p class="section-sub">Built for students who want to see what the rest of the country is building.</p>
+<div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+        {% for _ in range(2) %}
+        {% for college in colleges %}
+        <span class="marquee-item mono">{{ college }}<span class="marquee-sep">/</span></span>
+        {% endfor %}
+        {% endfor %}
+        {% if not colleges %}
+        <span class="marquee-item mono">IIT MADRAS<span class="marquee-sep">/</span></span>
+        <span class="marquee-item mono">ANNA UNIVERSITY<span class="marquee-sep">/</span></span>
+        <span class="marquee-item mono">NIT TRICHY<span class="marquee-sep">/</span></span>
+        {% endif %}
     </div>
-    <div class="steps">
-        <div class="step glass">
-            <span class="step-num">01</span>
-            <h3>Discover</h3>
-            <p>Search fests, hackathons, workshops and sports meets from colleges across the country.</p>
+</div>
+
+<section id="events" class="section events-section">
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">01 — Discover</span>
+                <h2>Upcoming events</h2>
+            </div>
+            <p class="section-sub">Filter by campus, category or keyword. Every event is open to
+                students from any college.</p>
         </div>
-        <div class="step glass">
-            <span class="step-num">02</span>
-            <h3>Apply</h3>
-            <p>Send one application with your student profile. No forms, no WhatsApp forwards.</p>
+
+        <div class="chip-rail">
+            <a class="chip {% if not filters.category %}is-active{% endif %}"
+                href="{{ url_for('main.index', q=filters.q or None, college=filters.college or None) }}#events">All</a>
+            {% for category in categories %}
+            <a class="chip {% if filters.category == category %}is-active{% endif %}"
+                href="{{ url_for('main.index', category=category, q=filters.q or None, college=filters.college or None) }}#events">
+                {{ category }}
+            </a>
+            {% endfor %}
         </div>
-        <div class="step glass">
-            <span class="step-num">03</span>
-            <h3>Show up</h3>
-            <p>Get approved by the organizer and travel. The badge is the same for every campus.</p>
+
+        <form class="filter-bar" method="GET" action="{{ url_for('main.index') }}" data-auto-submit>
+            {% if filters.category %}<input type="hidden" name="category" value="{{ filters.category }}">{% endif %}
+            <div class="search-field">
+                {{ icon('search', 18) }}
+                <label class="sr-only" for="q">Search events</label>
+                <input type="search" id="q" name="q" value="{{ filters.q }}"
+                    placeholder="Search events, colleges, cities">
+                <span class="key-hint mono" aria-hidden="true">/</span>
+            </div>
+            <div class="select-field">
+                <label class="sr-only" for="college">College</label>
+                <select id="college" name="college">
+                    <option value="">All colleges</option>
+                    {% for college in colleges %}
+                    <option value="{{ college }}" {% if filters.college == college %}selected{% endif %}>{{ college }}</option>
+                    {% endfor %}
+                </select>
+                {{ icon('chevron-down', 16) }}
+            </div>
+            <button type="submit" class="btn btn-primary">Search</button>
+            {% if filters.q or filters.category or filters.college %}
+            <a class="btn btn-ghost" href="{{ url_for('main.index') }}#events">Clear</a>
+            {% endif %}
+        </form>
+
+        <div class="results-meta">
+            <span class="mono">{{ events|length }} RESULT{% if events|length != 1 %}S{% endif %}</span>
+            <div class="active-filters">
+                {% if filters.q %}
+                <a class="filter-chip"
+                    href="{{ url_for('main.index', category=filters.category or None, college=filters.college or None) }}#events">
+                    “{{ filters.q }}” {{ icon('x', 12) }}
+                </a>
+                {% endif %}
+                {% if filters.college %}
+                <a class="filter-chip"
+                    href="{{ url_for('main.index', q=filters.q or None, category=filters.category or None) }}#events">
+                    {{ filters.college }} {{ icon('x', 12) }}
+                </a>
+                {% endif %}
+                {% if filters.category %}
+                <a class="filter-chip"
+                    href="{{ url_for('main.index', q=filters.q or None, college=filters.college or None) }}#events">
+                    {{ filters.category }} {{ icon('x', 12) }}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% set show_spotlight = events and events|length > 1 and not (filters.q or filters.category or filters.college) %}
+
+        {% if show_spotlight %}
+        {% set featured = events[0] %}
+        <article class="spotlight" data-reveal>
+            <a class="spotlight-media" href="{{ url_for('events.event_details', event_id=featured.id) }}">
+                <img src="{{ featured.image_url or url_for('static', filename='images/event-placeholder.svg') }}"
+                    alt="{{ featured.title }}"
+                    onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/event-placeholder.svg') }}';">
+                <span class="tag tag--solid">Featured</span>
+            </a>
+            <div class="spotlight-body">
+                <div class="spotlight-top">
+                    <span class="pill">{{ featured.category }}</span>
+                    <span class="mono">{{ featured.date.strftime('%A, %b %d') }}</span>
+                </div>
+                <h3 class="spotlight-title">
+                    <a href="{{ url_for('events.event_details', event_id=featured.id) }}">{{ featured.title }}</a>
+                </h3>
+                <p class="spotlight-college">{{ icon('pin', 14) }} {{ featured.host_college }}</p>
+                <p class="spotlight-desc">{{ featured.description|truncate(210, True, '…') }}</p>
+
+                <dl class="spotlight-facts">
+                    <div>
+                        <dt class="mono">DATE</dt>
+                        <dd>{{ featured.date.strftime('%b %d, %Y') }}</dd>
+                    </div>
+                    <div>
+                        <dt class="mono">TIME</dt>
+                        <dd>{{ featured.start_time or 'TBA' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="mono">SEATS</dt>
+                        <dd>{% if featured.capacity %}{{ featured.seats_left }} left{% else %}Open{% endif %}</dd>
+                    </div>
+                </dl>
+
+                <div class="spotlight-actions">
+                    <a class="btn btn-primary" href="{{ url_for('events.event_details', event_id=featured.id) }}">
+                        View event {{ icon('arrow-right', 16) }}
+                    </a>
+                    <span class="spotlight-applied mono">{{ featured.registration_count }} APPLIED</span>
+                </div>
+            </div>
+        </article>
+        {% endif %}
+
+        {% if events %}
+        <div class="event-grid">
+            {% for event in (events[1:] if show_spotlight else events) %}
+            {{ event_card(event) }}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state" data-reveal>
+            <span class="empty-icon">{{ icon('search', 26) }}</span>
+            <h3>No events match that search</h3>
+            <p>Try a different keyword, or clear the filters to see everything.</p>
+            <a href="{{ url_for('main.index') }}#events" class="btn btn-outline">Clear filters</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<section class="section how-section">
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">02 — How it works</span>
+                <h2>Built for cross-campus</h2>
+            </div>
+            <p class="section-sub">No WhatsApp forwards, no broken Google Forms. One profile, every
+                campus.</p>
+        </div>
+
+        <div class="steps">
+            <article class="step" data-reveal>
+                <span class="step-index mono">01</span>
+                <h3>Discover</h3>
+                <p>Search fests, hackathons, workshops and sports meets from colleges across the
+                    country. Filter by campus or category.</p>
+            </article>
+            <article class="step" data-reveal>
+                <span class="step-index mono">02</span>
+                <h3>Apply</h3>
+                <p>Send one application with your student profile. Track it from pending to
+                    accepted on your dashboard.</p>
+            </article>
+            <article class="step" data-reveal>
+                <span class="step-index mono">03</span>
+                <h3>Show up</h3>
+                <p>Get approved by the organizer, add the event to your calendar and travel. The
+                    badge is the same on every campus.</p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="cta-band">
+    <div class="container cta-inner">
+        <div>
+            <span class="eyebrow">Ready when you are</span>
+            <h2>Put your campus on the map.</h2>
+            <p>Host an event, or find your next one. Free for students and organizers.</p>
+        </div>
+        <div class="cta-actions">
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">Open dashboard</a>
+            {% else %}
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Create free account</a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline">Sign in</a>
+            {% endif %}
         </div>
     </div>
 </section>

@@ -53,3 +53,27 @@ python -m pytest
 - `Event.registrations` is loaded eagerly so `|length` works in templates.
 - The login route accepts a safe relative `next` parameter.
 - Templates reference `current_user.is_organizer` / `current_user.is_student`.
+
+## Frontend
+
+The UI is a single hand-written design system in `static/css/style.css`
+(no framework, no build step). Keep it that way.
+
+- **Tokens** live in `:root` (`--bg`, `--surface`, `--accent`, `--font-*`,
+  `--header-h`). Reuse them; do not hard-code new colours.
+- **Typography**: Space Grotesk for display, Inter for body, JetBrains Mono for
+  technical labels. Mono labels are uppercase with wide letter-spacing.
+- **Layout primitives**: `.container`, `.section`, `.panel`, `.stat-grid`,
+  `.event-grid`, `.form-shell`, `.event-layout`.
+- **Components**: buttons (`.btn-primary` / `.btn-outline` / `.btn-ghost`),
+  `.tag`, `.pill`, `.status-pill--{pending,accepted,rejected}`, `.event-card`,
+  `.spotlight`, `.data-table`, `.filter-tabs`.
+- **Icons** come from the `icon(name, size)` macro in `templates/macros.html`.
+  Add new inline SVGs there, never a font or CDN icon pack.
+- **Cards** are rendered by the `event_card(event)` macro so home, dashboard and
+  related-events stay identical.
+- **JS** in `static/js/main.js` is progressive enhancement only: nav, reveal,
+  counters, toasts, confirm prompts, copy, ICS, CSV, filters. Every page must
+  still work with JS disabled.
+- Bump the `v='N'` query on the CSS/JS URLs in `base.html` after changing them
+  so browsers do not serve stale assets.

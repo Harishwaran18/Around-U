@@ -41,7 +41,7 @@ def test_unknown_page_returns_404(client):
 def test_register_creates_student_and_signs_in(client, register, app):
     response = register()
     assert response.status_code == 200
-    assert b"Your applications" in response.data
+    assert b"Your activity" in response.data and b"Applications" in response.data
 
     with app.app_context():
         user = User.query.filter_by(email="newstudent@example.com").first()
@@ -75,7 +75,7 @@ def test_login_rejects_bad_password(client, student_id):
 def test_login_succeeds(client, student_id, login):
     response = login("student1@example.com")
     assert response.status_code == 200
-    assert b"Your applications" in response.data
+    assert b"Your activity" in response.data and b"Applications" in response.data
 
 
 def test_organizer_can_publish_event(client, organizer_id, login, app):

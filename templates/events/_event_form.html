@@ -1,69 +1,72 @@
-<form method="POST" action="{{ action_url }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-    <div class="form-group">
+{% from "macros.html" import icon %}
+<div class="form-grid">
+    <div class="field field--full">
         <label for="title">Event title</label>
-        <input type="text" id="title" name="title" class="form-control" maxlength="200"
-            value="{{ form.get('title', '') }}" placeholder="e.g. Shaastra 2026" required autofocus>
+        <input class="input" id="title" name="title" maxlength="200" required value="{{ form.title or '' }}"
+            placeholder="e.g. Shaastra 2027 — Tech Fest">
+        <span class="field-hint">Clear, specific names get more applications.</span>
     </div>
 
-    <div class="form-group">
+    <div class="field field--full">
         <label for="description">Description</label>
-        <textarea id="description" name="description" class="form-control" rows="6"
-            placeholder="What happens at the event? Who should apply?" required>{{ form.get('description', '') }}</textarea>
+        <textarea class="input textarea" id="description" name="description" rows="6" required
+            placeholder="What happens at the event, who should apply, what to bring…">{{ form.description or '' }}</textarea>
     </div>
 
-    <div class="form-row">
-        <div class="form-group">
-            <label for="date">Date</label>
-            <input type="date" id="date" name="date" class="form-control" value="{{ form.get('date', '') }}" required>
-        </div>
-        <div class="form-group">
-            <label for="start_time">Start time <span class="label-optional">optional</span></label>
-            <input type="time" id="start_time" name="start_time" class="form-control"
-                value="{{ form.get('start_time', '') }}">
-        </div>
+    <div class="field">
+        <label for="date">Date</label>
+        <input class="input" type="date" id="date" name="date" required value="{{ form.date or '' }}">
     </div>
 
-    <div class="form-row">
-        <div class="form-group">
-            <label for="category">Category</label>
-            <select id="category" name="category" class="form-control">
-                {% for category in categories %}
-                <option value="{{ category }}" {% if form.get('category') == category %}selected{% endif %}>{{ category }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="capacity">Capacity <span class="label-optional">optional</span></label>
-            <input type="number" id="capacity" name="capacity" class="form-control" min="1"
-                value="{{ form.get('capacity', '') }}" placeholder="Leave blank for unlimited">
-        </div>
+    <div class="field">
+        <label for="start_time">Start time</label>
+        <input class="input" type="time" id="start_time" name="start_time" value="{{ form.start_time or '' }}">
+        <span class="field-hint">Optional.</span>
     </div>
 
-    <div class="form-group">
+    <div class="field">
+        <label for="location">Venue</label>
+        <input class="input" id="location" name="location" required value="{{ form.location or '' }}"
+            placeholder="e.g. IIT Madras Campus, Chennai">
+    </div>
+
+    <div class="field">
         <label for="host_college">Host college</label>
-        <input type="text" id="host_college" name="host_college" class="form-control" list="college-options"
-            value="{{ form.get('host_college', '') }}" placeholder="Which campus is hosting?" required>
-        <datalist id="college-options">
+        <input class="input" id="host_college" name="host_college" list="college-list" required
+            value="{{ form.host_college or '' }}" placeholder="Start typing your college">
+        <datalist id="college-list">
             {% for college in colleges %}
             <option value="{{ college }}"></option>
             {% endfor %}
         </datalist>
     </div>
 
-    <div class="form-group">
-        <label for="location">Venue / address</label>
-        <input type="text" id="location" name="location" class="form-control"
-            value="{{ form.get('location', '') }}" placeholder="e.g. Main Auditorium, Guindy" required>
+    <div class="field">
+        <label for="category">Category</label>
+        <div class="select-field">
+            <select id="category" name="category" required>
+                {% for category in categories %}
+                <option value="{{ category }}" {% if form.category == category %}selected{% endif %}>{{ category }}</option>
+                {% endfor %}
+            </select>
+            {{ icon('chevron-down', 16) }}
+        </div>
     </div>
 
-    <div class="form-group">
-        <label for="image_url">Cover image URL <span class="label-optional">optional</span></label>
-        <input type="url" id="image_url" name="image_url" class="form-control"
-            value="{{ form.get('image_url', '') }}" placeholder="https://example.com/cover.jpg">
-        <small class="form-hint">Leave blank to use the default AroundU cover.</small>
+    <div class="field">
+        <label for="capacity">Capacity</label>
+        <input class="input" type="number" id="capacity" name="capacity" min="1"
+            value="{{ form.capacity or '' }}" placeholder="Blank = open entry">
+        <span class="field-hint">Leave blank for unlimited seats.</span>
     </div>
 
-    <button type="submit" class="btn btn-primary w-full mt-4">{{ submit_label }}</button>
-</form>
+    <div class="field field--full">
+        <label for="image_url">Cover image URL</label>
+        <input class="input" type="url" id="image_url" name="image_url" value="{{ form.image_url or '' }}"
+            placeholder="https://images.unsplash.com/…" data-image-input>
+        <span class="field-hint">Optional. Wide images (16:9) look best.</span>
+        <div class="image-preview" data-image-preview {% if not form.image_url %}hidden{% endif %}>
+            <img src="{{ form.image_url or '' }}" alt="Cover preview">
+        </div>
+    </div>
+</div>

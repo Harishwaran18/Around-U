@@ -1,12 +1,20 @@
 {% extends "base.html" %}
+{% from "macros.html" import icon %}
 
 {% block title %}Something went wrong — AroundU{% endblock %}
 
 {% block content %}
-<div class="container error-page">
-    <p class="error-code">500</p>
-    <h1>Something went wrong</h1>
-    <p class="text-secondary">We have logged the error. Please try again in a moment.</p>
-    <a href="{{ url_for('main.index') }}" class="btn btn-primary">Back to events</a>
-</div>
+<section class="error-page">
+    <div class="container error-inner">
+        <span class="mono error-code">500</span>
+        <span class="eyebrow">System error</span>
+        <h1>Something broke on our side.</h1>
+        <p>The request could not be completed. Try again in a moment — if it keeps happening,
+            the network status page will show whether it is us or you.</p>
+        <div class="error-actions">
+            <a class="btn btn-primary" href="{{ url_for('main.index') }}">Back to events</a>
+            <a class="btn btn-outline" href="{{ url_for('main.healthz') }}">Check status</a>
+        </div>
+    </div>
+</section>
 {% endblock %}

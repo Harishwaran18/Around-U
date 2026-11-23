@@ -1,84 +1,99 @@
 {% extends "base.html" %}
+{% from "macros.html" import icon %}
 
 {% block title %}Create account — AroundU{% endblock %}
 
 {% block content %}
-{% set selected_college = form.get('college', '') %}
-{% set is_other = selected_college and selected_college not in colleges %}
-<div class="form-container glass">
-    <h2 class="text-center mb-8">Create account</h2>
-    <form method="POST" action="{{ url_for('auth.register') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<section class="auth-shell">
+    <aside class="auth-aside">
+        <div class="auth-aside-inner">
+            <span class="eyebrow">Access // 02</span>
+            <h1>Join the<br>network.</h1>
+            <p class="auth-lead">One account for every campus. Apply to events, or host your own.</p>
 
-        <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" class="form-control" placeholder="johndoe"
-                value="{{ form.get('username', '') }}" minlength="3" maxlength="80" autocomplete="username" required
-                autofocus>
+            <ul class="auth-points">
+                <li><span class="mono">01</span> Free for students and organizers</li>
+                <li><span class="mono">02</span> Apply to any college's events</li>
+                <li><span class="mono">03</span> Publish events in under a minute</li>
+            </ul>
+
+            <div class="auth-demo">
+                <span class="mono">DEMO ACCESS</span>
+                <code>student@demo.com</code>
+                <code>password123</code>
+            </div>
         </div>
+        <span class="auth-coord mono" aria-hidden="true">LAT 13.0827 · LON 80.2707<br>SESSION // ENCRYPTED</span>
+    </aside>
 
-        <div class="form-group">
-            <label for="email">Email address</label>
-            <input type="email" id="email" name="email" class="form-control" placeholder="name@example.com"
-                value="{{ form.get('email', '') }}" autocomplete="email" required>
+    <div class="auth-panel">
+        <div class="auth-card" data-reveal>
+            <span class="eyebrow">Create account</span>
+            <h2>Start on AroundU</h2>
+            <p class="auth-sub">Students apply. Organizers publish. Pick your role.</p>
+
+            <form method="POST" action="{{ url_for('auth.register') }}" class="form" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="field">
+                    <label for="username">Username</label>
+                    <input class="input" type="text" id="username" name="username" autocomplete="username"
+                        placeholder="johndoe" minlength="3" maxlength="80" value="{{ form.username or '' }}" required>
+                </div>
+
+                <div class="field">
+                    <label for="email">Email address</label>
+                    <input class="input" type="email" id="email" name="email" autocomplete="email"
+                        placeholder="name@example.com" value="{{ form.email or '' }}" required>
+                </div>
+
+                <div class="field">
+                    <label for="password">Password</label>
+                    <input class="input" type="password" id="password" name="password"
+                        autocomplete="new-password" placeholder="At least 8 characters" minlength="8" required>
+                </div>
+
+                <div class="field-row">
+                    <div class="field">
+                        <label for="role">I am a</label>
+                        <div class="select-field">
+                            <select id="role" name="role">
+                                <option value="student" {% if form.role != 'organizer' %}selected{% endif %}>Student</option>
+                                <option value="organizer" {% if form.role == 'organizer' %}selected{% endif %}>Event organizer</option>
+                            </select>
+                            {{ icon('chevron-down', 16) }}
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="college">College / university</label>
+                        <div class="select-field">
+                            <select id="college" name="college" required data-college-select>
+                                <option value="">Select your college</option>
+                                {% for college in colleges %}
+                                <option value="{{ college }}" {% if form.college == college %}selected{% endif %}>{{ college }}</option>
+                                {% endfor %}
+                                <option value="Other" {% if form.college == 'Other' or (form.college and form.college not in colleges) %}selected{% endif %}>Other (type your college)</option>
+                            </select>
+                            {{ icon('chevron-down', 16) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field" data-other-college hidden>
+                    <label for="other_college">Your college name</label>
+                    <input class="input" type="text" id="other_college" name="other_college"
+                        placeholder="Enter your college name" maxlength="120"
+                        value="{% if form.college == 'Other' %}{{ form.other_college or '' }}{% elif form.college and form.college not in colleges %}{{ form.college }}{% endif %}">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    Create account {{ icon('arrow-right', 16) }}
+                </button>
+            </form>
+
+            <p class="auth-switch">Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
         </div>
-
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" class="form-control" placeholder="••••••••"
-                minlength="8" autocomplete="new-password" required>
-            <small class="form-hint">At least 8 characters.</small>
-        </div>
-
-        <div class="form-group">
-            <label for="role">I am a…</label>
-            <select id="role" name="role" class="form-control">
-                <option value="student" {% if form.get('role', 'student') == 'student' %}selected{% endif %}>Student</option>
-                <option value="organizer" {% if form.get('role') == 'organizer' %}selected{% endif %}>Event organizer</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="college">College / University</label>
-            <select id="college" name="college" class="form-control" required>
-                <option value="" disabled {% if not selected_college %}selected{% endif %}>Select your college</option>
-                {% for college in colleges %}
-                <option value="{{ college }}" {% if selected_college == college %}selected{% endif %}>{{ college }}</option>
-                {% endfor %}
-                <option value="Other" {% if is_other %}selected{% endif %}>Other (type it in)</option>
-            </select>
-        </div>
-
-        <div class="form-group" id="other-college-group" {% if not is_other %}hidden{% endif %}>
-            <label for="other_college">College name</label>
-            <input type="text" id="other_college" name="other_college" class="form-control"
-                placeholder="e.g. Loyola College" value="{{ selected_college if is_other else '' }}">
-        </div>
-
-        <button type="submit" class="btn btn-primary w-full mt-4">Sign up</button>
-    </form>
-
-    <p class="form-footnote">
-        Already have an account? <a href="{{ url_for('auth.login') }}" class="text-accent">Sign in</a>
-    </p>
-</div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    (function () {
-        const college = document.getElementById('college');
-        const otherGroup = document.getElementById('other-college-group');
-        const otherInput = document.getElementById('other_college');
-
-        function sync() {
-            const isOther = college.value === 'Other';
-            otherGroup.hidden = !isOther;
-            otherInput.required = isOther;
-        }
-
-        college.addEventListener('change', sync);
-        sync();
-    })();
-</script>
+    </div>
+</section>
 {% endblock %}

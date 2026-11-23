@@ -4,6 +4,7 @@ from datetime import date, datetime
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 
 from constants import (
@@ -144,7 +145,25 @@ def event_details(event_id: int):
             user_id=current_user.id, event_id=event.id
         ).first()
 
-    return render_template("events/event_details.html", event=event, registration=registration)
+    related_events = (
+        Event.query.filter(
+            Event.id != event.id,
+            or_(
+                Event.category == event.category,
+                Event.host_college == event.host_college,
+            ),
+        )
+        .order_by(Event.date.asc())
+        .limit(3)
+        .all()
+    )
+
+    return render_template(
+        "events/event_details.html",
+        event=event,
+        registration=registration,
+        related_events=related_events,
+    )
 
 
 @events_bp.post("/<int:event_id>/apply")
