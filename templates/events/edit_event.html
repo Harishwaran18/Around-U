@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ event.title }} — AroundU{% endblock %}
+
+{% block content %}
+<div class="form-container form-wide glass">
+    <h2 class="mb-2">Edit event</h2>
+    <p class="form-hint mb-8">{{ event.title }}</p>
+
+    {% set action_url = url_for('events.edit_event', event_id=event.id) %}
+    {% set submit_label = 'Save changes' %}
+    {% include "events/_event_form.html" %}
+
+    <a href="{{ url_for('events.manage_event', event_id=event.id) }}"
+        class="btn btn-ghost w-full mt-4">Back to applications</a>
+</div>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.title }} — AroundU{% endblock %}
+
+{% block content %}
+{% set is_owner = current_user.is_authenticated and current_user.id == event.organizer_id %}
+<article class="detail">
+    <div class="detail-hero">
+        <img src="{{ event.image_url or url_for('static', filename='images/event-placeholder.svg') }}"
+            alt="{{ event.title }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/event-placeholder.svg') }}';">
+        <div class="detail-hero-overlay"></div>
+        <div class="container detail-hero-content">
+            <span class="badge badge-category">{{ event.category }}</span>
+            <h1>{{ event.title }}</h1>
+            <p class="detail-host">{{ event.host_college }}</p>
+        </div>
+    </div>
+
+    <div class="container detail-grid">
+        <div class="detail-main">
+            <h2 class="section-title">About the event</h2>
+            <p class="detail-description">{{ event.description }}</p>
+
+            <div class="detail-facts">
+                <div class="fact glass-panel">
+                    <span class="fact-label">Date</span>
+                    <span class="fact-value">{{ event.date.strftime('%A, %B %d, %Y') }}</span>
+                </div>
+                <div class="fact glass-panel">
+                    <span class="fact-label">Time</span>
+                    <span class="fact-value">{{ event.start_time or 'To be announced' }}</span>
+                </div>
+                <div class="fact glass-panel">
+                    <span class="fact-label">Venue</span>
+                    <span class="fact-value">{{ event.location }}</span>
+                </div>
+                <div class="fact glass-panel">
+                    <span class="fact-label">Organizer</span>
+                    <span class="fact-value">{{ event.organizer.username }}</span>
+                </div>
+            </div>
+        </div>
+
+        <aside class="detail-sidebar">
+            <div class="card glass sidebar-card">
+                <h3 class="mb-6">Event info</h3>
+
+                <div class="info-row">
+                    <span class="info-label">Seats</span>
+                    <span class="info-value">
+                        {% if event.capacity %}
+                        {{ event.seats_left }} of {{ event.capacity }} left
+                        {% else %}
+                        Open entry
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Applications</span>
+                    <span class="info-value">{{ event.registration_count }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Status</span>
+                    <span class="info-value">
+                        {% if event.is_past %}Finished
+                        {% elif event.is_full %}Full
+                        {% else %}Open
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="sidebar-actions">
+                    {% if current_user.is_authenticated %}
+                    {% if current_user.is_student %}
+                    {% if registration %}
+                    <div class="sidebar-status">
+                        <span class="status-pill status-{{ registration.status }}">{{ registration.status }}</span>
+                        <p class="form-hint">Applied {{ registration.applied_at.strftime('%b %d, %Y') }}</p>
+                    </div>
+                    {% if not event.is_past %}
+                    <form method="POST" action="{{ url_for('events.cancel_registration', event_id=event.id) }}"
+                        data-confirm="Withdraw your application?">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-ghost w-full">Withdraw application</button>
+                    </form>
+                    {% endif %}
+                    {% elif event.is_past %}
+                    <button type="button" class="btn w-full" disabled>Event finished</button>
+                    {% elif event.is_full %}
+                    <button type="button" class="btn w-full" disabled>Event full</button>
+                    {% else %}
+                    <form method="POST" action="{{ url_for('events.apply_event', event_id=event.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-primary w-full">Apply now</button>
+                    </form>
+                    {% endif %}
+                    {% elif is_owner %}
+                    <a href="{{ url_for('events.manage_event', event_id=event.id) }}"
+                        class="btn btn-primary w-full">Manage applications</a>
+                    <a href="{{ url_for('events.edit_event', event_id=event.id) }}"
+                        class="btn btn-outline w-full mt-2">Edit event</a>
+                    {% else %}
+                    <p class="form-hint text-center">Organizer account. Sign in as a student to apply.</p>
+                    {% endif %}
+                    {% else %}
+                    <a href="{{ url_for('auth.login', next=request.path) }}" class="btn btn-primary w-full">Sign in
+                        to apply</a>
+                    {% endif %}
+                </div>
+            </div>
+        </aside>
+    </div>
+</article>
+{% endblock %}

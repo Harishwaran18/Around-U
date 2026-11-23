@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% from "macros.html" import event_card %}
+
+{% block title %}AroundU — Discover college events across campuses{% endblock %}
+
+{% block content %}
+<header class="hero">
+    <div class="container hero-content">
+        <span class="hero-subtitle">The inter-college event network</span>
+        <h1>Every campus.<br>One stage.</h1>
+        <p class="hero-lead">
+            Book events at other colleges. A tier 3 student can walk into an IIT fest. An IIT
+            student can compete at a government college hackathon. Same platform, same opportunity.
+        </p>
+        <div class="hero-actions">
+            <a href="#events" class="btn btn-primary">Explore events</a>
+            {% if current_user.is_authenticated %}
+            {% if current_user.is_organizer %}
+            <a href="{{ url_for('events.create_event') }}" class="btn btn-outline">Host an event</a>
+            {% else %}
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline">My dashboard</a>
+            {% endif %}
+            {% else %}
+            <a href="{{ url_for('auth.register') }}" class="btn btn-outline">Create free account</a>
+            {% endif %}
+        </div>
+
+        <dl class="hero-stats">
+            <div>
+                <dt>Live events</dt>
+                <dd>{{ stats.events }}</dd>
+            </div>
+            <div>
+                <dt>Campuses</dt>
+                <dd>{{ stats.colleges }}</dd>
+            </div>
+            <div>
+                <dt>Students</dt>
+                <dd>{{ stats.students }}</dd>
+            </div>
+        </dl>
+    </div>
+</header>
+
+<section id="events" class="container section">
+    <div class="section-head">
+        <h2>Upcoming events</h2>
+        <p class="section-sub">Filter by campus, category or keyword.</p>
+    </div>
+
+    <form class="filter-bar glass" method="GET" action="{{ url_for('main.index') }}" data-auto-submit>
+        <div class="filter-field filter-search">
+            <label class="sr-only" for="q">Search events</label>
+            <input class="form-control" type="search" id="q" name="q"
+                placeholder="Search events, colleges, cities…" value="{{ filters.q }}">
+        </div>
+        <div class="filter-field">
+            <label class="sr-only" for="category">Category</label>
+            <select class="form-control" id="category" name="category">
+                <option value="">All categories</option>
+                {% for category in categories %}
+                <option value="{{ category }}" {% if filters.category == category %}selected{% endif %}>
+                    {{ category }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-field">
+            <label class="sr-only" for="college">College</label>
+            <select class="form-control" id="college" name="college">
+                <option value="">All colleges</option>
+                {% for college in colleges %}
+                <option value="{{ college }}" {% if filters.college == college %}selected{% endif %}>
+                    {{ college }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="{{ url_for('main.index') }}#events" class="btn btn-ghost">Reset</a>
+        </div>
+    </form>
+
+    {% if events %}
+    <div class="event-grid">
+        {% for event in events %}
+        {{ event_card(event) }}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state glass">
+        <h3>No events match that search</h3>
+        <p>Try a different keyword or clear the filters.</p>
+        <a href="{{ url_for('main.index') }}#events" class="btn btn-outline">Clear filters</a>
+    </div>
+    {% endif %}
+</section>
+
+<section class="container section how-it-works">
+    <div class="section-head">
+        <h2>How AroundU works</h2>
+        <p class="section-sub">Built for students who want to see what the rest of the country is building.</p>
+    </div>
+    <div class="steps">
+        <div class="step glass">
+            <span class="step-num">01</span>
+            <h3>Discover</h3>
+            <p>Search fests, hackathons, workshops and sports meets from colleges across the country.</p>
+        </div>
+        <div class="step glass">
+            <span class="step-num">02</span>
+            <h3>Apply</h3>
+            <p>Send one application with your student profile. No forms, no WhatsApp forwards.</p>
+        </div>
+        <div class="step glass">
+            <span class="step-num">03</span>
+            <h3>Show up</h3>
+            <p>Get approved by the organizer and travel. The badge is the same for every campus.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

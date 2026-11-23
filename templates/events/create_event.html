@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Host an event — AroundU{% endblock %}
+
+{% block content %}
+<div class="form-container form-wide glass">
+    <h2 class="mb-2">Host an event</h2>
+    <p class="form-hint mb-8">Publish once and reach students on every campus.</p>
+
+    {% set action_url = url_for('events.create_event') %}
+    {% set submit_label = 'Publish event' %}
+    {% include "events/_event_form.html" %}
+</div>
+{% endblock %}

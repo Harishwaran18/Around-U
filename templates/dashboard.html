@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — AroundU{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container page-header-inner">
+        <div>
+            <p class="eyebrow">{{ current_user.role }} dashboard</p>
+            <h1>Welcome, {{ current_user.username }}</h1>
+            <p class="text-secondary">{{ current_user.college_name }}</p>
+        </div>
+        {% if current_user.is_organizer %}
+        <a href="{{ url_for('events.create_event') }}" class="btn btn-primary">+ New event</a>
+        {% else %}
+        <a href="{{ url_for('main.index') }}#events" class="btn btn-outline">Browse events</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="container section">
+    {% if current_user.is_organizer %}
+    <div class="stat-grid">
+        <div class="stat-card glass">
+            <span class="stat-label">Events published</span>
+            <strong class="stat-value">{{ events|length }}</strong>
+        </div>
+        <div class="stat-card glass">
+            <span class="stat-label">Total applications</span>
+            <strong class="stat-value">{{ events|sum(attribute='registration_count') }}</strong>
+        </div>
+        <div class="stat-card glass">
+            <span class="stat-label">Awaiting review</span>
+            <strong class="stat-value text-accent">{{ pending_count }}</strong>
+        </div>
+    </div>
+
+    <h2 class="section-title">Your events</h2>
+    {% if events %}
+    <div class="event-grid">
+        {% for event in events %}
+        <article class="card glass">
+            <div class="card-img-wrapper">
+                <img class="card-img"
+                    src="{{ event.image_url or url_for('static', filename='images/event-placeholder.svg') }}"
+                    alt="{{ event.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/event-placeholder.svg') }}';">
+                <span class="badge badge-category">{{ event.category }}</span>
+                {% if event.is_past %}<span class="badge badge-past">Past</span>{% endif %}
+            </div>
+            <div class="card-content">
+                <p class="card-college">{{ event.host_college }}</p>
+                <h3 class="card-title">
+                    <a href="{{ url_for('events.event_details', event_id=event.id) }}">{{ event.title }}</a>
+                </h3>
+                <div class="card-meta">
+                    <span class="meta-item">{{ event.date.strftime('%b %d, %Y') }}</span>
+                    <span class="meta-item">{{ event.registration_count }} applied</span>
+                </div>
+                {% if event.pending_count %}
+                <p class="card-note text-accent">{{ event.pending_count }} awaiting your review</p>
+                {% endif %}
+                <div class="card-footer card-footer-actions">
+                    <a href="{{ url_for('events.manage_event', event_id=event.id) }}"
+                        class="btn btn-primary btn-sm">Manage</a>
+                    <a href="{{ url_for('events.edit_event', event_id=event.id) }}"
+                        class="btn btn-outline btn-sm">Edit</a>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state glass">
+        <h3>No events yet</h3>
+        <p>Publish your first event and students from every campus can apply.</p>
+        <a href="{{ url_for('events.create_event') }}" class="btn btn-primary">Host an event</a>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <h2 class="section-title">Your applications</h2>
+    {% if registrations %}
+    <div class="event-grid">
+        {% for registration in registrations %}
+        <article class="card glass">
+            <div class="card-img-wrapper">
+                <img class="card-img"
+                    src="{{ registration.event.image_url or url_for('static', filename='images/event-placeholder.svg') }}"
+                    alt="{{ registration.event.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/event-placeholder.svg') }}';">
+                <span class="badge badge-category">{{ registration.event.category }}</span>
+            </div>
+            <div class="card-content">
+                <p class="card-college">{{ registration.event.host_college }}</p>
+                <h3 class="card-title">
+                    <a
+                        href="{{ url_for('events.event_details', event_id=registration.event.id) }}">{{ registration.event.title }}</a>
+                </h3>
+                <div class="card-meta">
+                    <span class="meta-item">{{ registration.event.date.strftime('%b %d, %Y') }}</span>
+                    <span class="status-pill status-{{ registration.status }}">{{ registration.status }}</span>
+                </div>
+                <div class="card-footer card-footer-actions">
+                    <a href="{{ url_for('events.event_details', event_id=registration.event.id) }}"
+                        class="btn btn-outline btn-sm">View details</a>
+                    {% if not registration.event.is_past %}
+                    <form method="POST" action="{{ url_for('events.cancel_registration', event_id=registration.event.id) }}"
+                        data-confirm="Withdraw your application?">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-ghost btn-sm">Withdraw</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state glass">
+        <h3>No applications yet</h3>
+        <p>Browse events hosted by colleges across the country and apply in one click.</p>
+        <a href="{{ url_for('main.index') }}#events" class="btn btn-primary">Explore events</a>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+{% endblock %}
